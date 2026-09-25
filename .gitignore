@@ -8,3 +8,5 @@ release
 coverage
 *.tsbuildinfo
 agent-tools
+.env
+.env.local

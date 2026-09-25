@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>CreateMeter</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="top">
+        <div>
+          <p class="eyebrow" id="eyebrow">Today</p>
+          <h1>CreateMeter</h1>
+        </div>
+        <p class="ratio" id="ratio">—</p>
+      </header>
+
+      <p class="banner hidden" id="banner"></p>
+
+      <section class="meter" aria-label="Today breakdown">
+        <svg class="donut" viewBox="0 0 36 36" role="img" aria-labelledby="ratio">
+          <circle class="track" cx="18" cy="18" r="14"></circle>
+          <circle id="arc-creating" class="arc creating" cx="18" cy="18" r="14"></circle>
+          <circle id="arc-consuming" class="arc consuming" cx="18" cy="18" r="14"></circle>
+          <circle id="arc-neutral" class="arc neutral" cx="18" cy="18" r="14"></circle>
+        </svg>
+        <ul class="legend">
+          <li>
+            <span class="swatch creating"></span>
+            <span>Creating</span>
+            <strong id="creating">0s</strong>
+          </li>
+          <li>
+            <span class="swatch consuming"></span>
+            <span>Consuming</span>
+            <strong id="consuming">0s</strong>
+          </li>
+          <li>
+            <span class="swatch neutral"></span>
+            <span>Neutral</span>
+            <strong id="neutral">0s</strong>
+          </li>
+        </ul>
+      </section>
+
+      <section class="now" id="now-card">
+        <p class="eyebrow">Now</p>
+        <p class="now-title" id="now-title">Waiting for first sample…</p>
+        <p class="now-meta" id="now-meta"></p>
+      </section>
+
+      <section class="week" aria-label="This week">
+        <div class="week-head">
+          <p class="eyebrow">This week</p>
+          <p id="week-summary">No tracked time yet</p>
+        </div>
+        <div class="week-bars" id="week-bars"></div>
+      </section>
+
+      <footer class="actions">
+        <button type="button" id="pause">Pause tracking</button>
+        <button type="button" class="ghost" id="rules">Open rules…</button>
+      </footer>
+    </div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

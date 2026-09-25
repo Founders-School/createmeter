@@ -12,7 +12,6 @@ export interface TrayActions {
   openData: () => void
   openAccessibility: () => void
   openAutomation: () => void
-  signIn: () => void
   signOut: () => void
   quit: () => void
 }
@@ -41,7 +40,7 @@ export class TrayController {
     if (!snapshot.signedIn) {
       this.tray.setTitle('')
       this.tray.setToolTip('CreateMeter — Sign in')
-      this.tray.setContextMenu(this.signedOutMenu(snapshot))
+      this.tray.setContextMenu(this.signedOutMenu())
       return
     }
     const extra = snapshot.paused ? 'paused' : snapshot.current?.locked ? 'locked' : snapshot.current?.idle ? 'idle' : undefined
@@ -50,16 +49,13 @@ export class TrayController {
     this.tray.setContextMenu(this.menu(snapshot))
   }
 
-  private signedOutMenu(snapshot: Snapshot): Electron.Menu {
-    const label = snapshot.authConfigured ? 'Sign in with Google…' : 'Sign in (not configured)…'
+  private signedOutMenu(): Electron.Menu {
     return Menu.buildFromTemplate([
       { label: 'CreateMeter', enabled: false },
       { type: 'separator' },
       { label: 'Signed out — tracking is off', enabled: false },
       { label: `Use ${allowedEmailHint()}`, enabled: false },
-      snapshot.authMessage ? { label: snapshot.authMessage, enabled: false } : { visible: false },
-      { label, click: () => this.actions.signIn() },
-      { label: 'Open Today…', click: () => this.actions.openToday() },
+      { label: 'Sign in…', click: () => this.actions.openToday() },
       { type: 'separator' },
       { label: 'Quit CreateMeter', click: () => this.actions.quit() }
     ])

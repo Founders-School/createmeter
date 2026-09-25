@@ -104,10 +104,10 @@ async function openPreferencePane(urls: string[]): Promise<void> {
   }
 }
 
-async function handleSignIn(): Promise<ReturnType<typeof currentSnapshot>> {
+function handleSignIn(email: string, password: string, confirmPassword?: string) {
   createTodayWindow()
   try {
-    await auth.signIn(dataDir)
+    auth.signIn(dataDir, email, password, confirmPassword)
     startTracking()
   } catch (error) {
     refresh()
@@ -116,7 +116,7 @@ async function handleSignIn(): Promise<ReturnType<typeof currentSnapshot>> {
   return currentSnapshot()
 }
 
-function handleSignOut(): ReturnType<typeof currentSnapshot> {
+function handleSignOut() {
   stopTracking()
   auth.signOut(dataDir)
   createTodayWindow()
@@ -138,11 +138,13 @@ function wireIpc(): void {
   ipcMain.handle('open-data', () => shell.openPath(currentSnapshot().dataDir))
   ipcMain.handle('open-accessibility', () => openPreferencePane(ACCESSIBILITY_URLS))
   ipcMain.handle('open-automation', () => openPreferencePane(AUTOMATION_URLS))
-  ipcMain.handle('sign-in', () => handleSignIn())
+  ipcMain.handle('sign-in', (_event, email: string, password: string, confirmPassword?: string) =>
+    handleSignIn(email, password, confirmPassword)
+  )
   ipcMain.handle('sign-out', () => handleSignOut())
 }
 
-app.whenReady().then(async () => {
+app.whenReady().then(() => {
   dataDir = app.getPath('userData')
   rulesPath = join(dataDir, 'rules.json')
   const statsPath = join(dataDir, 'stats.json')
@@ -172,11 +174,6 @@ app.whenReady().then(async () => {
     openAutomation: () => {
       void openPreferencePane(AUTOMATION_URLS)
     },
-    signIn: () => {
-      void handleSignIn().catch((error) => {
-        console.warn('CreateMeter: sign-in failed', error)
-      })
-    },
     signOut: () => {
       handleSignOut()
     },
@@ -191,7 +188,7 @@ app.whenReady().then(async () => {
     tracker?.reloadRules()
   })
 
-  const signedIn = await auth.restore(dataDir)
+  const signedIn = auth.restore(dataDir)
   if (signedIn) startTracking()
   else refresh()
 

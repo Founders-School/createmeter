@@ -103,7 +103,6 @@ function renderGate(snapshot: Snapshot, signingIn = false): void {
   const gate = $('signin-gate')
   const error = $('signin-error')
   const button = $('signin') as HTMLButtonElement
-  const note = $('signin-note')
   $('signin-allowlist').textContent = `Allowed: ${allowedEmailHint()}. Personal Gmail is rejected.`
 
   if (snapshot.signedIn) {
@@ -113,16 +112,13 @@ function renderGate(snapshot: Snapshot, signingIn = false): void {
 
   gate.classList.remove('hidden')
   button.disabled = signingIn
-  button.textContent = signingIn ? 'Waiting for Google…' : 'Sign in with Google'
+  button.textContent = signingIn ? 'Signing in…' : 'Continue'
   if (snapshot.authMessage) {
     error.textContent = snapshot.authMessage
     error.classList.remove('hidden')
   } else {
     error.classList.add('hidden')
   }
-  note.textContent = snapshot.authConfigured
-    ? 'A browser window opens for Google. Come back here when it says you are signed in.'
-    : 'Google OAuth is not configured in this build. Nat still needs to add GOOGLE_CLIENT_ID (README).'
 }
 
 function render(snapshot: Snapshot, signingIn = false): void {
@@ -160,9 +156,16 @@ async function start(): Promise<void> {
   const api = window.createMeter
   const pause = $('pause')
   const rules = $('rules')
-  const signin = $('signin')
+  const form = $('signin-form') as HTMLFormElement
   const signout = $('signout')
   $('signin-allowlist').textContent = `Allowed: ${ALLOWED_EMAIL_DOMAINS.map((d) => `@${d}`).join(' or ')}.`
+
+  const credentials = () => {
+    const email = ($('email') as HTMLInputElement).value
+    const password = ($('password') as HTMLInputElement).value
+    const confirmPassword = ($('confirm') as HTMLInputElement).value
+    return { email, password, confirmPassword }
+  }
 
   if (!api) {
     const wantGate = new URLSearchParams(window.location.search).get('gate') === '1'
@@ -178,8 +181,17 @@ async function start(): Promise<void> {
     rules.addEventListener('click', () => {
       window.alert('On a Mac this opens ~/Library/Application Support/CreateMeter/rules.json')
     })
-    signin.addEventListener('click', () => {
-      render(preview.signIn())
+    form.addEventListener('submit', (event) => {
+      event.preventDefault()
+      const { email, password, confirmPassword } = credentials()
+      try {
+        render(preview.signIn(email, password, confirmPassword))
+      } catch (error) {
+        render({
+          ...preview.signOut(),
+          authMessage: error instanceof Error ? error.message : 'Sign-in failed'
+        })
+      }
     })
     signout.addEventListener('click', () => {
       render(preview.signOut())
@@ -200,10 +212,12 @@ async function start(): Promise<void> {
   rules.addEventListener('click', () => {
     void api.openRules()
   })
-  signin.addEventListener('click', async () => {
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault()
+    const { email, password, confirmPassword } = credentials()
     render(await api.getSnapshot(), true)
     try {
-      render(await api.signIn())
+      render(await api.signIn(email, password, confirmPassword))
     } catch (error) {
       const snapshot = await api.getSnapshot()
       render({

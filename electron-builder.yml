@@ -1,10 +1,15 @@
-appId: com.createmeter.app
+appId: com.foundersschool.createmeter
 productName: CreateMeter
+copyright: Copyright © Founders School
 directories:
   output: release
 files:
   - out/**/*
   - resources/**/*
+executableName: CreateMeter
+extraMetadata:
+  name: createmeter
+  productName: CreateMeter
 mac:
   category: public.app-category.productivity
   target:
@@ -15,12 +20,23 @@ mac:
       arch:
         - arm64
   icon: resources/icon.png
+  artifactName: ${productName}-${version}-${arch}.${ext}
   hardenedRuntime: true
+  gatekeeperAssess: false
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
+  # Unsigned unless CSC_LINK / Developer ID is provided in CI.
+  forceCodeSigning: false
   extendInfo:
     LSUIElement: true
+    CFBundleName: CreateMeter
+    CFBundleDisplayName: CreateMeter
+    CFBundleIdentifier: com.foundersschool.createmeter
     NSAppleEventsUsageDescription: CreateMeter reads the active browser tab so sites like GitHub can count as creating and YouTube as consuming.
 extraResources:
   - from: resources
     to: resources
+publish:
+  provider: github
+  owner: Founders-School
+  repo: createmeter

@@ -59,6 +59,13 @@ export interface PermissionsStatus {
   automation: PermissionState
 }
 
+export interface PublicUser {
+  email: string
+  name?: string
+  picture?: string
+  emailVerified: boolean
+}
+
 export interface Snapshot {
   today: DayTotals
   week: DayTotals[]
@@ -73,6 +80,10 @@ export interface Snapshot {
   rulesPath: string
   idleThresholdSeconds: number
   preview: boolean
+  signedIn: boolean
+  user: PublicUser | null
+  authConfigured: boolean
+  authMessage: string
 }
 
 export const CATEGORIES: Category[] = ['creating', 'consuming', 'neutral']

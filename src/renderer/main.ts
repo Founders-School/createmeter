@@ -1,3 +1,4 @@
+import { ALLOWED_EMAIL_DOMAINS, allowedEmailHint } from '../shared/auth'
 import {
   categoryLabel,
   creatingShare,
@@ -98,8 +99,37 @@ function renderBanner(snapshot: Snapshot): void {
   banner.classList.add('hidden')
 }
 
-function render(snapshot: Snapshot): void {
+function renderGate(snapshot: Snapshot, signingIn = false): void {
+  const gate = $('signin-gate')
+  const error = $('signin-error')
+  const button = $('signin') as HTMLButtonElement
+  const note = $('signin-note')
+  $('signin-allowlist').textContent = `Allowed: ${allowedEmailHint()}. Personal Gmail is rejected.`
+
+  if (snapshot.signedIn) {
+    gate.classList.add('hidden')
+    return
+  }
+
+  gate.classList.remove('hidden')
+  button.disabled = signingIn
+  button.textContent = signingIn ? 'Waiting for Google…' : 'Sign in with Google'
+  if (snapshot.authMessage) {
+    error.textContent = snapshot.authMessage
+    error.classList.remove('hidden')
+  } else {
+    error.classList.add('hidden')
+  }
+  note.textContent = snapshot.authConfigured
+    ? 'A browser window opens for Google. Come back here when it says you are signed in.'
+    : 'Google OAuth is not configured in this build. Nat still needs to add GOOGLE_CLIENT_ID (README).'
+}
+
+function render(snapshot: Snapshot, signingIn = false): void {
+  renderGate(snapshot, signingIn)
+  document.title = snapshot.signedIn ? 'Today — CreateMeter' : 'Sign in — CreateMeter'
   $('eyebrow').textContent = longDateLabel(snapshot.today.date)
+  $('who').textContent = snapshot.user?.email ? `Signed in as ${snapshot.user.email}` : ''
   const share = creatingShare(snapshot.today)
   $('ratio').textContent =
     share === null
@@ -123,16 +153,24 @@ function render(snapshot: Snapshot): void {
   const pause = $('pause') as HTMLButtonElement
   pause.textContent = snapshot.paused ? 'Resume tracking' : 'Pause tracking'
   pause.dataset.paused = snapshot.paused ? '1' : '0'
+  pause.disabled = !snapshot.signedIn
 }
 
 async function start(): Promise<void> {
   const api = window.createMeter
   const pause = $('pause')
   const rules = $('rules')
+  const signin = $('signin')
+  const signout = $('signout')
+  $('signin-allowlist').textContent = `Allowed: ${ALLOWED_EMAIL_DOMAINS.map((d) => `@${d}`).join(' or ')}.`
 
   if (!api) {
-    render(preview.tick())
-    window.setInterval(() => render(preview.tick()), 1000)
+    const wantGate = new URLSearchParams(window.location.search).get('gate') === '1'
+    if (wantGate) render(preview.signOut())
+    else render(preview.tick())
+    window.setInterval(() => {
+      if (preview.signedIn) render(preview.tick())
+    }, 1000)
     pause.addEventListener('click', () => {
       const next = pause.dataset.paused !== '1'
       render(preview.setPaused(next))
@@ -140,11 +178,17 @@ async function start(): Promise<void> {
     rules.addEventListener('click', () => {
       window.alert('On a Mac this opens ~/Library/Application Support/CreateMeter/rules.json')
     })
+    signin.addEventListener('click', () => {
+      render(preview.signIn())
+    })
+    signout.addEventListener('click', () => {
+      render(preview.signOut())
+    })
     return
   }
 
   render(await api.getSnapshot())
-  api.onSnapshot(render)
+  api.onSnapshot((snapshot) => render(snapshot))
   window.setInterval(async () => {
     render(await api.getSnapshot())
   }, 2000)
@@ -155,6 +199,21 @@ async function start(): Promise<void> {
   })
   rules.addEventListener('click', () => {
     void api.openRules()
+  })
+  signin.addEventListener('click', async () => {
+    render(await api.getSnapshot(), true)
+    try {
+      render(await api.signIn())
+    } catch (error) {
+      const snapshot = await api.getSnapshot()
+      render({
+        ...snapshot,
+        authMessage: error instanceof Error ? error.message : snapshot.authMessage
+      })
+    }
+  })
+  signout.addEventListener('click', async () => {
+    render(await api.signOut())
   })
 }
 

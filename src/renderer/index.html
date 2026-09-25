@@ -12,12 +12,28 @@
         <p class="eyebrow">Alpha School</p>
         <h1>Sign in to CreateMeter</h1>
         <p class="gate-copy">
-          Use your school Google account. CreateMeter only stores who you are on this Mac — create/consume totals never leave the machine.
+          Use your school email. First time on this Mac? Choose a password. Create/consume totals stay on this machine.
         </p>
         <p id="signin-allowlist" class="gate-allow"></p>
-        <p id="signin-error" class="error hidden"></p>
-        <button type="button" id="signin">Sign in with Google</button>
-        <p id="signin-note" class="gate-note"></p>
+        <form id="signin-form" class="gate-form">
+          <label>
+            School email
+            <input id="email" type="email" autocomplete="username" placeholder="you@alpha.school" required />
+          </label>
+          <label>
+            Password
+            <input id="password" type="password" autocomplete="current-password" minlength="8" required />
+          </label>
+          <label>
+            Confirm password
+            <input id="confirm" type="password" autocomplete="new-password" minlength="8" />
+          </label>
+          <p id="signin-error" class="error hidden"></p>
+          <button type="submit" id="signin">Continue</button>
+        </form>
+        <p id="signin-note" class="gate-note">
+          Returning students can leave confirm blank. There is no Google sign-in and no cloud password reset.
+        </p>
       </div>
     </div>
 

@@ -1,3 +1,4 @@
+import { assertPassword, assertSchoolEmail } from '../shared/auth'
 import { classify } from '../shared/classifier'
 import { DEFAULT_RULES } from '../shared/default-rules'
 import { addMs, emptyDay, localDateKey, parseUrl, sumDays } from '../shared/format'
@@ -64,6 +65,8 @@ export function createPreviewStore() {
   let lastTick = now
   let current = sampleFromWorld(now)
   let signedIn = true
+  const accounts = new Map<string, string>([['ada@alpha.school', 'longenough']])
+  let userEmail = 'ada@alpha.school'
 
   const snapshot = (): Snapshot => ({
     today: { ...today },
@@ -80,7 +83,7 @@ export function createPreviewStore() {
     idleThresholdSeconds: DEFAULT_RULES.idleThresholdSeconds,
     preview: true,
     signedIn,
-    user: signedIn ? { email: 'ada@alpha.school', name: 'Ada', emailVerified: true } : null,
+    user: signedIn ? { email: userEmail } : null,
     authConfigured: true,
     authMessage: ''
   })
@@ -101,7 +104,19 @@ export function createPreviewStore() {
       paused = next
       return this.tick()
     },
-    signIn(): Snapshot {
+    signIn(email = 'ada@alpha.school', password = 'longenough', confirmPassword?: string): Snapshot {
+      const normalized = assertSchoolEmail(email)
+      const secret = assertPassword(password)
+      const existing = accounts.get(normalized)
+      if (!existing) {
+        const confirm = confirmPassword ?? ''
+        if (!confirm) throw new Error('Confirm your password to create an account on this Mac.')
+        if (confirm !== secret) throw new Error('Those passwords do not match.')
+        accounts.set(normalized, secret)
+      } else if (existing !== secret) {
+        throw new Error('That password does not match this email on this Mac.')
+      }
+      userEmail = normalized
       signedIn = true
       lastTick = Date.now()
       return this.tick()

@@ -27,7 +27,17 @@ describe('Today preview store', () => {
     expect(out.user).toBeNull()
     expect(out.current).toBeNull()
     expect(out.tracking).toBe(false)
-    expect(store.signIn().signedIn).toBe(true)
+    expect(store.signIn('ada@alpha.school', 'longenough').signedIn).toBe(true)
+  })
+
+  it('creates a new school account and rejects Gmail', () => {
+    const store = createPreviewStore()
+    store.signOut()
+    expect(() => store.signIn('ada@gmail.com', 'longenough', 'longenough')).toThrow(/alpha.school/)
+    const created = store.signIn('coach@founders.school', 'longenough', 'longenough')
+    expect(created.user?.email).toBe('coach@founders.school')
+    store.signOut()
+    expect(() => store.signIn('coach@founders.school', 'wrongpass1')).toThrow(/does not match/)
   })
 })
 

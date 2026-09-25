@@ -1,8 +1,7 @@
 import { safeStorage } from 'electron'
 import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { sessionIsFresh, type AuthSession } from '../shared/auth'
-import { refreshSession } from './google-oauth'
+import { isAllowedEmail, isLocalSession, type AuthSession } from '../shared/auth'
 
 export function sessionPath(userData: string): string {
   return join(userData, 'session.bin')
@@ -29,31 +28,27 @@ export function readSession(userData: string): AuthSession | null {
     const encrypted = sessionPath(userData)
     if (existsSync(encrypted) && safeStorage.isEncryptionAvailable()) {
       const json = safeStorage.decryptString(readFileSync(encrypted))
-      return JSON.parse(json) as AuthSession
+      return asLocalSession(JSON.parse(json))
     }
     const plain = join(userData, 'session.json')
-    if (existsSync(plain)) return JSON.parse(readFileSync(plain, 'utf8')) as AuthSession
+    if (existsSync(plain)) return asLocalSession(JSON.parse(readFileSync(plain, 'utf8')))
   } catch (error) {
     console.warn('CreateMeter: could not read session', error)
   }
   return null
 }
 
-export async function restoreSession(userData: string): Promise<AuthSession | null> {
+export function restoreSession(userData: string): AuthSession | null {
   const stored = readSession(userData)
-  if (!stored?.user?.email) return null
-  if (sessionIsFresh(stored)) return stored
-  if (!stored.refreshToken) {
-    clearSession(userData)
+  if (!stored || !isAllowedEmail(stored.user.email)) {
+    if (stored) clearSession(userData)
     return null
   }
-  try {
-    const next = await refreshSession(stored)
-    writeSession(userData, next)
-    return next
-  } catch (error) {
-    console.warn('CreateMeter: refresh failed', error)
-    clearSession(userData)
-    return null
-  }
+  return stored
+}
+
+function asLocalSession(value: unknown): AuthSession | null {
+  if (!isLocalSession(value)) return null
+  if (!isAllowedEmail(value.user.email)) return null
+  return value
 }

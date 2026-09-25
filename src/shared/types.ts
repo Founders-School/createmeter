@@ -61,9 +61,7 @@ export interface PermissionsStatus {
 
 export interface PublicUser {
   email: string
-  name?: string
-  picture?: string
-  emailVerified: boolean
+  createdAt?: number
 }
 
 export interface Snapshot {

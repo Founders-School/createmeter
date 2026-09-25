@@ -19,8 +19,6 @@ jobs:
     name: Package CreateMeter.app (Apple Silicon)
     runs-on: macos-14
     env:
-      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
       CSC_IDENTITY_AUTO_DISCOVERY: false
     steps:
       - name: Checkout
@@ -62,11 +60,17 @@ jobs:
             release/latest-mac.yml
           if-no-files-found: error
 
+      - name: Read app version
+        id: version
+        run: echo "tag=v$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
       - name: Publish GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v') || inputs.create_release
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v') || inputs.create_release
         uses: softprops/action-gh-release@v2
         with:
-          draft: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || steps.version.outputs.tag }}
+          name: CreateMeter ${{ steps.version.outputs.tag }}
+          draft: false
           generate_release_notes: true
           files: |
             release/*.dmg

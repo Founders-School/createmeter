@@ -8,7 +8,8 @@ const api = {
   openData: (): Promise<string> => ipcRenderer.invoke('open-data'),
   openAccessibility: (): Promise<void> => ipcRenderer.invoke('open-accessibility'),
   openAutomation: (): Promise<void> => ipcRenderer.invoke('open-automation'),
-  signIn: (): Promise<Snapshot> => ipcRenderer.invoke('sign-in'),
+  signIn: (email: string, password: string, confirmPassword?: string): Promise<Snapshot> =>
+    ipcRenderer.invoke('sign-in', email, password, confirmPassword),
   signOut: (): Promise<Snapshot> => ipcRenderer.invoke('sign-out'),
   onSnapshot: (listener: (snapshot: Snapshot) => void): (() => void) => {
     const wrapped = (_event: unknown, snapshot: Snapshot): void => listener(snapshot)

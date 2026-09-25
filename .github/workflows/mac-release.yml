@@ -39,26 +39,18 @@ jobs:
 
       - name: Package arm64 dmg and zip
         env:
-          # Missing secrets become "". electron-builder treats any CSC_LINK
-          # (including empty) as a cert path, so never export blanks.
-          MAYBE_CSC_LINK: ${{ secrets.CSC_LINK }}
-          MAYBE_CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-          MAYBE_APPLE_ID: ${{ secrets.APPLE_ID }}
-          MAYBE_APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          MAYBE_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
         run: |
           set -euo pipefail
-          unset CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID || true
-          if [ -n "${MAYBE_CSC_LINK:-}" ]; then
-            export CSC_LINK="$MAYBE_CSC_LINK"
-            export CSC_KEY_PASSWORD="${MAYBE_CSC_KEY_PASSWORD:-}"
-          fi
-          if [ -n "${MAYBE_APPLE_ID:-}" ]; then
-            export APPLE_ID="$MAYBE_APPLE_ID"
-            export APPLE_APP_SPECIFIC_PASSWORD="${MAYBE_APPLE_APP_SPECIFIC_PASSWORD:-}"
-            export APPLE_TEAM_ID="${MAYBE_APPLE_TEAM_ID:-}"
-          fi
-          npm run dist -- --publish never
+          # Do not read secrets.CSC_*. Missing/blank secrets become "" and
+          # electron-builder 26 treats any defined CSC_LINK as a cert path:
+          # path.resolve(repo, "") is the repo dir → "createmeter not a file".
+          for var in CSC_LINK CSC_KEY_PASSWORD CSC_INSTALLER_LINK CSC_INSTALLER_KEY_PASSWORD WIN_CSC_LINK CSC_NAME; do
+            unset "$var" || true
+          done
+          npm run icons
+          env -u CSC_LINK -u CSC_KEY_PASSWORD -u CSC_INSTALLER_LINK -u CSC_INSTALLER_KEY_PASSWORD -u WIN_CSC_LINK -u CSC_NAME \
+            npm run dist
 
       - name: Upload release folder
         uses: actions/upload-artifact@v4

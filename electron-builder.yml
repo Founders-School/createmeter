@@ -25,7 +25,8 @@ mac:
   gatekeeperAssess: false
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
-  # Unsigned unless a real CSC_LINK is exported. Empty CSC_LINK is a cert-path bug.
+  # Skip signing entirely. Empty CSC_LINK is treated as a cert path ("not a file").
+  identity: null
   forceCodeSigning: false
   notarize: false
   extendInfo:

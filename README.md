@@ -139,8 +139,8 @@ When you have an **Apple Developer Program** account:
    - `CSC_LINK` — base64 of the `.p12`
    - `CSC_KEY_PASSWORD`
    - `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID` (for notarization)
-3. Remove `CSC_IDENTITY_AUTO_DISCOVERY: false` from the workflow (or leave it if `CSC_LINK` is set — electron-builder uses the link).
-4. Optionally set `mac.notarize: true` in [`electron-builder.yml`](electron-builder.yml).
+3. Unsigned CI **must not** export `CSC_LINK` / `CSC_KEY_PASSWORD` at all — including as empty strings. electron-builder treats any defined `CSC_LINK` as a cert path; `""` resolves to the repo directory and fails with `createmeter not a file`. The Mac workflow unsets those variables and sets `mac.identity: null` plus `CSC_IDENTITY_AUTO_DISCOVERY=false`.
+4. After real cert secrets exist, export them only when non-empty, then set `mac.notarize: true` in [`electron-builder.yml`](electron-builder.yml).
 
 Packaged identity (already set so System Settings does **not** say “Electron”):
 

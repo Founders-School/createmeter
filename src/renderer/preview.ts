@@ -63,32 +63,53 @@ export function createPreviewStore() {
   let paused = false
   let lastTick = now
   let current = sampleFromWorld(now)
+  let signedIn = true
+
+  const snapshot = (): Snapshot => ({
+    today: { ...today },
+    week: week.map((day) => ({ ...day })),
+    weekTotals: sumDays(week, 'week'),
+    current: signedIn ? current : null,
+    paused,
+    tracking: signedIn && !paused && Boolean(current.counted),
+    platform: 'preview',
+    isMac: false,
+    permissions: { accessibility: 'unsupported', automation: 'unsupported' },
+    dataDir: '~/Library/Application Support/CreateMeter',
+    rulesPath: '~/Library/Application Support/CreateMeter/rules.json',
+    idleThresholdSeconds: DEFAULT_RULES.idleThresholdSeconds,
+    preview: true,
+    signedIn,
+    user: signedIn ? { email: 'ada@alpha.school', name: 'Ada', emailVerified: true } : null,
+    authConfigured: true,
+    authMessage: ''
+  })
 
   return {
+    get signedIn() {
+      return signedIn
+    },
     tick(at = Date.now()): Snapshot {
+      if (!signedIn) return snapshot()
       const elapsed = Math.min(at - lastTick, 2000)
       lastTick = at
       current = { ...sampleFromWorld(at), paused }
       if (!paused && current.counted) addMs(today, current.category, elapsed)
-      return {
-        today: { ...today },
-        week: week.map((day) => ({ ...day })),
-        weekTotals: sumDays(week, 'week'),
-        current,
-        paused,
-        tracking: !paused && current.counted,
-        platform: 'preview',
-        isMac: false,
-        permissions: { accessibility: 'unsupported', automation: 'unsupported' },
-        dataDir: '~/Library/Application Support/CreateMeter',
-        rulesPath: '~/Library/Application Support/CreateMeter/rules.json',
-        idleThresholdSeconds: DEFAULT_RULES.idleThresholdSeconds,
-        preview: true
-      }
+      return snapshot()
     },
     setPaused(next: boolean): Snapshot {
       paused = next
       return this.tick()
+    },
+    signIn(): Snapshot {
+      signedIn = true
+      lastTick = Date.now()
+      return this.tick()
+    },
+    signOut(): Snapshot {
+      signedIn = false
+      paused = false
+      return snapshot()
     }
   }
 }

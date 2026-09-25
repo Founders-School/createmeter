@@ -44,6 +44,7 @@ export class Tracker extends EventEmitter {
   }
 
   start(): void {
+    this.lastTick = Date.now()
     void this.tick()
     this.arm()
   }
@@ -79,7 +80,11 @@ export class Tracker extends EventEmitter {
       dataDir: this.dataDir,
       rulesPath: this.rulesPath,
       idleThresholdSeconds: this.rules.idleThresholdSeconds,
-      preview: false
+      preview: false,
+      signedIn: false,
+      user: null,
+      authConfigured: false,
+      authMessage: ''
     }
   }
 

@@ -1,6 +1,7 @@
 import { Menu, Tray, nativeImage, type NativeImage } from 'electron'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
+import { allowedEmailHint } from '../shared/auth'
 import { categoryLabel, formatCompactTray, formatDuration, totalMs } from '../shared/format'
 import type { Snapshot } from '../shared/types'
 
@@ -11,6 +12,8 @@ export interface TrayActions {
   openData: () => void
   openAccessibility: () => void
   openAutomation: () => void
+  signIn: () => void
+  signOut: () => void
   quit: () => void
 }
 
@@ -35,26 +38,50 @@ export class TrayController {
   }
 
   render(snapshot: Snapshot): void {
+    if (!snapshot.signedIn) {
+      this.tray.setTitle('')
+      this.tray.setToolTip('CreateMeter — Sign in')
+      this.tray.setContextMenu(this.signedOutMenu(snapshot))
+      return
+    }
     const extra = snapshot.paused ? 'paused' : snapshot.current?.locked ? 'locked' : snapshot.current?.idle ? 'idle' : undefined
     this.tray.setTitle(formatCompactTray(snapshot.today, extra))
     this.tray.setToolTip(this.tooltip(snapshot))
     this.tray.setContextMenu(this.menu(snapshot))
   }
 
+  private signedOutMenu(snapshot: Snapshot): Electron.Menu {
+    const label = snapshot.authConfigured ? 'Sign in with Google…' : 'Sign in (not configured)…'
+    return Menu.buildFromTemplate([
+      { label: 'CreateMeter', enabled: false },
+      { type: 'separator' },
+      { label: 'Signed out — tracking is off', enabled: false },
+      { label: `Use ${allowedEmailHint()}`, enabled: false },
+      snapshot.authMessage ? { label: snapshot.authMessage, enabled: false } : { visible: false },
+      { label, click: () => this.actions.signIn() },
+      { label: 'Open Today…', click: () => this.actions.openToday() },
+      { type: 'separator' },
+      { label: 'Quit CreateMeter', click: () => this.actions.quit() }
+    ])
+  }
+
   private tooltip(snapshot: Snapshot): string {
     const now = snapshot.current
-    if (!now) return 'CreateMeter'
+    const who = snapshot.user?.email ? ` · ${snapshot.user.email}` : ''
+    if (!now) return `CreateMeter${who}`
     const site = now.host ? ` · ${now.host}` : ''
-    return `${now.appName}${site} · ${categoryLabel(now.category)}`
+    return `${now.appName}${site} · ${categoryLabel(now.category)}${who}`
   }
 
   private menu(snapshot: Snapshot): Electron.Menu {
     const current = snapshot.current
     const nowLine = this.nowLine(snapshot)
     const permissionItems = this.permissionItems(snapshot)
+    const email = snapshot.user?.email ?? 'signed in'
 
     return Menu.buildFromTemplate([
       { label: 'CreateMeter', enabled: false },
+      { label: `Signed in as ${email}`, enabled: false },
       { type: 'separator' },
       { label: 'Today', enabled: false },
       { label: `  Creating      ${formatDuration(snapshot.today.creatingMs)}`, enabled: false },
@@ -83,6 +110,7 @@ export class TrayController {
       { label: 'Reveal data folder…', click: () => this.actions.openData() },
       ...permissionItems,
       { type: 'separator' },
+      { label: 'Sign out', click: () => this.actions.signOut() },
       { label: 'Quit CreateMeter', click: () => this.actions.quit() }
     ])
   }

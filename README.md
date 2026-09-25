@@ -21,7 +21,7 @@ npm install
 npm run start
 ```
 
-That launches Electron in the menu bar. While developing, a **Today** window also opens so you can see the live breakdown. In a packaged build the dock icon stays hidden (`LSUIElement`); use **Open Today…** from the menu if you want the window.
+`npm install` also generates the menu-bar icons. That launches Electron in the menu bar. While developing, a **Today** window also opens so you can see the live breakdown. In a packaged build the dock icon stays hidden (`LSUIElement`); use **Open Today…** from the menu if you want the window.
 
 macOS will ask CreateMeter (or **Electron** during `npm run start`) to control Safari/Chrome. Click **OK**. Details are in [Permissions](#permissions) below.
 
@@ -129,7 +129,7 @@ Save the file. CreateMeter reloads it within a second or two.
 
 `match` is an app name or bundle id (case-insensitive). Short names like `Arc` use word boundaries so Archive Utility does not match. Host rules match the hostname or a suffix (`youtube.com` also matches `www.youtube.com`). Optional `pathPrefix` limits a host rule to a path.
 
-A commented copy of the shipped defaults lives in [`resources/default-rules.json`](resources/default-rules.json). First launch copies that into Application Support if no rules file exists.
+Shipped defaults live in [`src/shared/default-rules.ts`](src/shared/default-rules.ts). First launch writes them into Application Support if no rules file exists.
 
 ## Data & privacy
 

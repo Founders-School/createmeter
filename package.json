@@ -1,0 +1,38 @@
+{
+  "name": "createmeter",
+  "productName": "CreateMeter",
+  "version": "1.0.0",
+  "private": true,
+  "description": "macOS menu bar tracker for creating vs consuming time",
+  "author": "CreateMeter",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Founders-School/createmeter.git"
+  },
+  "homepage": "https://github.com/Founders-School/createmeter",
+  "type": "module",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "start": "electron-vite dev",
+    "dev": "electron-vite dev",
+    "preview:ui": "vite --config vite.ui.config.ts",
+    "build": "electron-vite build",
+    "dist": "electron-vite build && electron-builder --mac --arm64",
+    "test": "vitest run",
+    "icons": "node scripts/generate-icons.mjs",
+    "postinstall": "node scripts/generate-icons.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "electron": "^38.2.0",
+    "electron-builder": "^26.0.12",
+    "electron-vite": "^5.0.0",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.5",
+    "vitest": "^3.2.4"
+  }
+}

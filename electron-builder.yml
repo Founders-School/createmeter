@@ -1,0 +1,26 @@
+appId: com.createmeter.app
+productName: CreateMeter
+directories:
+  output: release
+files:
+  - out/**/*
+  - resources/**/*
+mac:
+  category: public.app-category.productivity
+  target:
+    - target: dmg
+      arch:
+        - arm64
+    - target: zip
+      arch:
+        - arm64
+  icon: resources/icon.png
+  hardenedRuntime: true
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    LSUIElement: true
+    NSAppleEventsUsageDescription: CreateMeter reads the active browser tab so sites like GitHub can count as creating and YouTube as consuming.
+extraResources:
+  - from: resources
+    to: resources

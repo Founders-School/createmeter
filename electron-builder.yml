@@ -25,8 +25,9 @@ mac:
   gatekeeperAssess: false
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
-  # Unsigned unless CSC_LINK / Developer ID is provided in CI.
+  # Unsigned unless a real CSC_LINK is exported. Empty CSC_LINK is a cert-path bug.
   forceCodeSigning: false
+  notarize: false
   extendInfo:
     LSUIElement: true
     CFBundleName: CreateMeter

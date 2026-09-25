@@ -22,11 +22,6 @@ jobs:
       GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
       GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
       CSC_IDENTITY_AUTO_DISCOVERY: false
-      CSC_LINK: ${{ secrets.CSC_LINK }}
-      CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-      APPLE_ID: ${{ secrets.APPLE_ID }}
-      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,7 +38,27 @@ jobs:
         run: npm test
 
       - name: Package arm64 dmg and zip
-        run: npm run dist
+        env:
+          # Missing secrets become "". electron-builder treats any CSC_LINK
+          # (including empty) as a cert path, so never export blanks.
+          MAYBE_CSC_LINK: ${{ secrets.CSC_LINK }}
+          MAYBE_CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          MAYBE_APPLE_ID: ${{ secrets.APPLE_ID }}
+          MAYBE_APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          MAYBE_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          unset CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID || true
+          if [ -n "${MAYBE_CSC_LINK:-}" ]; then
+            export CSC_LINK="$MAYBE_CSC_LINK"
+            export CSC_KEY_PASSWORD="${MAYBE_CSC_KEY_PASSWORD:-}"
+          fi
+          if [ -n "${MAYBE_APPLE_ID:-}" ]; then
+            export APPLE_ID="$MAYBE_APPLE_ID"
+            export APPLE_APP_SPECIFIC_PASSWORD="${MAYBE_APPLE_APP_SPECIFIC_PASSWORD:-}"
+            export APPLE_TEAM_ID="${MAYBE_APPLE_TEAM_ID:-}"
+          fi
+          npm run dist -- --publish never
 
       - name: Upload release folder
         uses: actions/upload-artifact@v4

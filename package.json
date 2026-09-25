@@ -18,7 +18,7 @@
     "dev": "electron-vite dev",
     "preview:ui": "vite --config vite.ui.config.ts",
     "build": "electron-vite build",
-    "dist": "electron-vite build && electron-builder --mac --arm64",
+    "dist": "electron-vite build && electron-builder --mac --arm64 --publish never",
     "test": "vitest run",
     "icons": "node scripts/generate-icons.mjs",
     "postinstall": "node scripts/generate-icons.mjs"
